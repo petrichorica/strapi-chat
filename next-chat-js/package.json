@@ -9,7 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@emoji-mart/data": "^1.1.2",
+    "@emoji-mart/react": "^1.1.1",
     "autoprefixer": "10.4.14",
+    "emoji-mart": "^5.5.2",
     "eslint": "8.38.0",
     "eslint-config-next": "13.3.0",
     "next": "13.3.0",
@@ -17,6 +20,7 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "socket.io-client": "^4.6.1",
+    "socket.io-stream": "^0.9.1",
     "tailwindcss": "3.3.1"
   }
 }

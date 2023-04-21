@@ -1,0 +1,25 @@
+{
+  "kind": "collectionType",
+  "collectionName": "upload_files",
+  "info": {
+    "singularName": "upload-file",
+    "pluralName": "upload-files",
+    "displayName": "upload file",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "size": {
+      "type": "biginteger"
+    },
+    "actualName": {
+      "type": "string"
+    }
+  }
+}

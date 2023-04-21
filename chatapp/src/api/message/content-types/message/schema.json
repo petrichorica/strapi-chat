@@ -4,7 +4,8 @@
   "info": {
     "singularName": "message",
     "pluralName": "messages",
-    "displayName": "message"
+    "displayName": "message",
+    "description": ""
   },
   "options": {
     "draftAndPublish": true
@@ -16,6 +17,10 @@
     },
     "user": {
       "type": "string"
+    },
+    "isFile": {
+      "type": "boolean",
+      "default": false
     }
   }
 }

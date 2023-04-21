@@ -25,6 +25,10 @@ export default {
       },
     });
 
+    const ss = require("socket.io-stream");
+    const fs = require("fs");
+    const path = require('path');
+
     io.on("connection", (socket) => {
 
       let socketUserid;
@@ -55,12 +59,14 @@ export default {
           })
           .catch((e) => {
             if (e.message == "Request failed with status code 400") {
-              socket.emit("roomData", {done: "existing"});
               axios.get("http://localhost:1337/api/active-users?filters[user][$eq]=" + username)
               .then((res) => {
                 const id = res.data.data[0].id;
                 socketUserid = id;
                 return axios.put(`http://localhost:1337/api/active-users/${id}`, strapiData)
+              })
+              .then((res) => {
+                socket.emit("roomData", {done: "existing"});
               })
               .catch((err) => {
                 console.log("update active status error", err.message);
@@ -76,20 +82,80 @@ export default {
         const strapiData = {
           data: {
             user: data.user,
-            message: data.message
+            message: data.message,
+            isFile: data.isFile,
           },
         };
         const axios = require("axios");
         axios.post("http://localhost:1337/api/messages", strapiData)
         .then((e) => {
-          socket.broadcast.to("group").emit("message", {
+          socket.emit("message", {
             user: data.username,
-            text: data.message
+            text: data.message,
           });
         })
         .catch((e) => {
           console.log("sendmessage error", e.message);
         })
+      })
+
+      socket.on("typing", (data, callback) => {
+        console.log(`${data.user} is typing`);
+        callback({status: true});
+
+        socket.broadcast.to("group").emit("someoneIsTyping", {
+          user: data.user,
+        });
+      })
+
+      socket.on("stopTyping", (data) => {
+        console.log(`${data.user} stops typing`);
+
+        socket.broadcast.to("group").emit("someoneStopsTyping", {
+          user: data.user,
+        })
+      })
+
+      ss(socket).on("sendFile", (stream, data, callback) => {
+        const dir = './public/upload';
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir);
+        }
+        const filename = path.basename(data.name);
+
+        let [name, ext] = filename.split('.', 2);
+        if (ext === undefined) {
+          ext = '';
+        }
+
+        const time = new Date();
+        const iso = time.toISOString();
+        const timeStamp = iso.slice(0, 4) + iso.slice(5, 7) + iso.slice(8, 10)
+                        + iso.slice(11, 13) + iso.slice(14, 16) + iso.slice(17, 19);
+        const actualName = name + timeStamp + '.' + ext;
+        callback({actualName});
+
+        stream.pipe(fs.createWriteStream(dir + '/' + actualName));
+        console.log("Send file:", filename);
+      })
+
+      ss(socket).on("fileDownload", (stream, filename, callback) => {
+        const dir = './public/upload';
+        try {
+          const stats = fs.statSync(dir + '/' + filename);
+          const size = stats.size;
+          callback(false, {
+            name: filename,
+            size
+          });
+          const fileStream = fs.createReadStream(dir + '/' + filename);
+          fileStream.pipe(stream);
+        }
+        catch {
+          callback(true, {
+            message: "download error"
+          });
+        }
       })
 
       socket.on("disconnect", (reason) => {
